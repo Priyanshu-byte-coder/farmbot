@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmer Consultant Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        #chatbox {
+            max-width: 600px;
+            margin: 0 auto;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 15px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .message {
+            margin: 10px 0;
+            font-size: 18px;
+            line-height: 1.5;
+        }
+        .user {
+            text-align: right;
+            color: blue;
+        }
+        .bot {
+            text-align: left;
+            color: green;
+        }
+        #input-area {
+            margin-top: 15px;
+            display: flex;
+        }
+        #input-area input {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        #input-area button {
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background-color: #007BFF;
+            color: #fff;
+            border-radius: 5px;
+            margin-left: 10px;
+        }
+        #loading {
+            display: none;
+            text-align: center;
+            color: #888;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="chatbox">
+        <h2>Ram - Your Farming Consultant</h2>
+        <div id="chat-log"></div>
+        <div id="loading">Ram is thinking...</div>
+        <div id="input-area">
+            <input type="text" id="user-input" placeholder="Ask Ram anything...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const inputField = document.getElementById("user-input");
+            const chatLog = document.getElementById("chat-log");
+            const loadingIndicator = document.getElementById("loading");
+            const userMessage = inputField.value.trim();
+
+            if (!userMessage) return;
+
+            // Display user message
+            chatLog.innerHTML += `<div class="message user">${userMessage}</div>`;
+            inputField.value = "";
+
+            // Show loading indicator
+            loadingIndicator.style.display = "block";
+
+            // Send to backend
+            const response = await fetch("/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: userMessage }),
+            });
+            const data = await response.json();
+
+            // Hide loading indicator
+            loadingIndicator.style.display = "none";
+
+            // Format bot response text
+            const formattedResponse = formatText(data.response);
+
+            // Display bot response
+            chatLog.innerHTML += `<div class="message bot">${formattedResponse}</div>`;
+        }
+
+        // Function to format the response text
+        function formatText(text) {
+            // Convert headings
+            text = text.replace(/\*\*(.*?)\*\*/g, '<h1>$1</h1>');
+            // Convert italics
+            text = text.replace(/\*(.*?)\*/g, '<i>$1</i>');
+            // Convert bullet points
+            text = text.replace(/\* (.*?)\*/g, '<li>$1</li>');
+            // Convert paragraphs
+            text = text.replace(/(\w+)([.!?]) (\w+)/g, '$1$2</p><p>$3');
+                return text
+                .replace(/<li>(.*?)<\/li>/g, '<ul>$&</ul>')
+                .replace(/<\/ul>(\s*<ul>)+/g, ''); 
+        }
+    </script>
+</body>
+</html>
